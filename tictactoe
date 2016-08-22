@@ -1,0 +1,154 @@
+#!/bin/bash
+# Script name: tttgamesimple
+# Usage: tttgame
+# Author: Jonathan Salama
+# Date Created: 8/16/2016
+# Date Modified: 08/19/2016 
+# Description: A simple tic-tac-toe game that has the 
+#              traditional 9 turns. The players will 
+#              enter an x,y coordinate for their selection.
+
+# Initialize the tic tac toe value array
+declare -a squarevalues=("" "" "" "" "" "" "" "" "")
+declare won=""
+declare -i player=1
+player1=""
+player2=""
+charselect=""
+declare -i index=0
+declare won=""
+# Use a regular expression pattern to match the user's input to a single x or o
+declare ttt_charselect_re='^[xXoO]+$'
+declare ttt_playselect_re='^[xX]+$'
+declare ttt_coord_re='[1-9]'
+declare selection=""
+
+# Function to draw the Tic Tac Toe square 
+# with the given values stored in an array 
+drawtttsquare () {
+	declare newline="true"
+	declare val1=""
+	declare val2=""
+	declare val3=""
+
+	printf "\n####### Tic -Tac-Toe #######\n\n" 
+	# Iterate through the fixed square array and print the values
+	for (( i=0 ; i<10 ; i++ )); do
+		if (( i%3 == 0 )) && (( i > 0 )); then
+			val1="${squarevalues[i-3]}"
+			val2="${squarevalues[i-2]}"
+			val3="${squarevalues[i-1]}"
+			if [[ ! $val1 ]]; then
+				 val1=" "
+			fi
+			if [[ ! $val2 ]]; then
+				 val2=" "
+			fi
+			if [[ ! $val3 ]]; then
+				 val3=" "
+			fi
+
+			printf "\t %s | %s | %s \n" "$val1" "$val2" "$val3"
+			if (( i < 7 )); then
+				printf "\t-----------\n"
+			fi
+		fi
+	done
+	printf "\n############################\n\n" 
+
+}
+
+# Function to determine if the game has been won
+isgamewon () {
+	declare -i gamewon=1
+
+	# Test the horizontal and diagonal lines for possible wins
+	# Note: I originally had these as for loop iterations but the square is a fixed 3x3 and this is cleaner to read
+	
+	
+	if [[ ${squarevalues[0]} ]] && [[ ${squarevalues[0]} == ${squarevalues[1]} ]] && [[ ${squarevalues[0]} == ${squarevalues[2]} ]]; then
+		gamewon=0
+	elif [[ ${squarevalues[3]} ]] && [[ ${squarevalues[3]} == ${squarevalues[4]} ]] && [[ ${squarevalues[3]} == ${squarevalues[5]} ]]; then
+		gamewon=0
+	elif [[ ${squarevalues[6]} ]] && [[ ${squarevalues[6]} == ${squarevalues[7]} ]] && [[ ${squarevalues[6]} == ${squarevalues[8]} ]]; then
+		gamewon=0
+	elif [[ ${squarevalues[0]} ]] && [[ ${squarevalues[0]} == ${squarevalues[4]} ]] && [[ ${squarevalues[0]} == ${squarevalues[8]} ]]; then
+		gamewon=0
+	elif [[ ${squarevalues[0]} ]] && [[ ${squarevalues[0]} == ${squarevalues[3]} ]] && [[ ${squarevalues[0]} == ${squarevalues[6]} ]]; then
+		gamewon=0
+	elif [[ ${squarevalues[1]} ]] && [[ ${squarevalues[1]} == ${squarevalues[4]} ]] && [[ ${squarevalues[1]} == ${squarevalues[7]} ]]; then
+		gamewon=0
+	elif [[ ${squarevalues[2]} ]] && [[ ${squarevalues[2]} == ${squarevalues[4]} ]] && [[ ${squarevalues[2]} == ${squarevalues[6]} ]]; then
+		gamewon=0
+	elif [[ ${squarevalues[2]} ]] && [[ ${squarevalues[2]} == ${squarevalues[5]} ]] && [[ ${squarevalues[2]} == ${squarevalues[8]} ]]; then
+		gamewon=0
+	fi
+
+	return $gamewon
+}
+
+
+# Prompt player1 to make a selection between X and O
+while [[ ! $player1 ]]; do
+	read -p "Player1, please make a selection between X and O: " charselect
+
+	if [[ $charselect =~ $ttt_charselect_re ]]; then
+		player1=$charselect
+		break
+	else
+		echo "The string entered is not a valid selection. Please select between X and O"
+		continue
+	fi
+done
+
+
+for (( x=0 ; x<10 ; x++ )); do
+	# Call function to draw the tic tac toe square
+	drawtttsquare
+
+	# Determine the current player and set the character selection accordngly (X or O)
+	if [[ $player == 1 ]]; then
+		selection=$player1
+	elif [[ $player == 2 ]]; then
+		# Check to see if Player 1 has already made his 
+		# selection and make the opposite one for player 2
+		if [[ $player1 =~ $ttt_playselect_re ]]; then
+			player2="O"
+		else
+			player2="X"
+		fi
+		selection=$player2
+	fi
+
+	# Prompt current to enter a coordinate where they want to store their selection
+	read -p "Player${player}, enter a square number to place your value (e.g. 1): " index
+
+	if [[ $index =~ $ttt_coord_re ]]; then
+		if [[ ${squarevalues[$index-1]} ]] ; then
+			echo "The square you specified already has been selected. Please make another selection"
+			continue
+		else
+			# Assign the selected value to the desired square
+			squarevalues[index-1]=$selection
+
+			# Check to see if the selection has won the game
+			if isgamewon ; then
+				drawtttsquare
+				echo "You have won the game! Congratulations"
+				break
+			fi
+
+		fi
+	else
+		echo "The string entered is not a valid selection. Please select between X and O"
+		continue
+	fi
+
+	if [[ $player == 1 ]]; then
+		player=2
+	elif [[ $player == 2 ]]; then
+		player=1
+	fi
+done
+
+exit 0
